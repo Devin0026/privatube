@@ -95,13 +95,28 @@ they're deleted or made private on YouTube.
 
 ## Install
 
-On the server:
+Point your domain at the server, then run this one line on it (replace the domain and
+the admin name):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Devin0026/privatube/main/deploy/get.sh | sudo APP_HOST=videos.example.com ADMIN=yourname bash
+```
+
+It takes about five minutes. At the end it shows your admin password **once**, so write
+it down. Then open `https://videos.example.com`, sign in, and scan the two-factor QR code
+with an authenticator app. Paste a channel link into **Admin → Add from YouTube** and
+you're done.
+
+<details>
+<summary>Prefer to read the code before running it? Install from a checkout instead.</summary>
 
 ```bash
 git clone https://github.com/Devin0026/privatube.git
 cd privatube
 sudo APP_HOST=videos.example.com bash ./deploy/install.sh
+sudo bash ./deploy/create-admin.sh yourname
 ```
+</details>
 
 The installer is safe to run again: it updates the code and keeps your data and settings.
 It sets up:
@@ -114,20 +129,12 @@ It sets up:
 
 It only adds its own nginx files, so other sites on the server keep working.
 
-Then create your admin account (the password is shown once):
-
-```bash
-sudo bash ./deploy/create-admin.sh yourname
-```
-
-Open `https://videos.example.com`, sign in, and scan the two-factor QR code with an
-authenticator app. Then paste a channel link into **Admin → Add from YouTube**.
-
 ### Options
 
 | Variable | Default | Meaning |
 |---|---|---|
 | `APP_HOST` | (required) | The site's domain name. |
+| `ADMIN` | (none) | One-line install only: create this admin account on the first install. |
 | `HTTPS_PORT` | `443` | Port for HTTPS. |
 | `CLOUDFLARE` | `0` | Set to `1` if the DNS record is proxied by Cloudflare (orange cloud). nginx then logs the real visitor IPs. Port 80 must still reach the server for the certificate. To use a port other than 443 behind Cloudflare, add an Origin Rule that sends HTTPS to that port, and pick one of the ports Cloudflare proxies (2053, 2083, 2087, 2096, 8443). |
 
@@ -165,7 +172,7 @@ works.
 
 ## Everyday use
 
-- **Update:** `git pull && sudo APP_HOST=videos.example.com bash ./deploy/install.sh`
+- **Update:** run the same one-line install again (or `git pull` and `install.sh` in a checkout).
 - **Accounts:** in **Admin → Users**. New users get a generated password to pass on.
 - **Guests:** create an **access code** in **Admin → Access codes**, limited to certain
   channels or videos, a number of devices and an expiry date.
@@ -228,6 +235,20 @@ between countries. Archive only what you have the right to keep, for example you
 uploads, Creative Commons videos, or private copies where your local law allows them.
 Don't use PrivaTube to republish other people's work. You are responsible for how you
 use it.
+
+## Support PrivaTube
+
+PrivaTube is free and always will be. If it helps you share videos with people you care
+about, a small tip keeps it going. Thank you!
+
+**USDT / USDC / ETH** on Ethereum or any EVM network (Arbitrum, Base, Optimism, Polygon,
+BNB Chain):
+
+```
+0xdff2E58ae8a2e1A4B47dbA26a042549cF5b21849
+```
+
+Starring the repository, reporting bugs and telling friends help just as much.
 
 ## License
 

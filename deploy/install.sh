@@ -108,7 +108,7 @@ systemctl restart privatube-web privatube-worker
 
 echo
 echo "Done: https://$APP_HOST$port_suffix"
-if ! sqlite3 "$DATA/privatube.db" "SELECT 1 FROM users WHERE role='admin' LIMIT 1" | grep -q 1; then
+if [ -z "${ADMIN:-}" ] && ! sqlite3 "$DATA/privatube.db" "SELECT 1 FROM users WHERE role='admin' LIMIT 1" | grep -q 1; then
     echo "Create your admin account (the password is shown once):"
-    echo "  sudo bash ./deploy/create-admin.sh YOURNAME"
+    echo "  sudo bash $REPO/deploy/create-admin.sh YOURNAME"
 fi
