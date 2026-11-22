@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Two-factor sign-in · PrivaTube{% endblock %}
+{% block main %}
+<div class="auth">
+  <h1>Two-factor sign-in</h1>
+  {% if enabled %}
+  <p>Two-factor sign-in is <strong>on</strong> for {{ p.name }}.</p>
+  <p class="muted">To move it to a new phone, ask another admin to reset it (Users page) or run
+    <code>python -m privatube.cli reset-mfa {{ p.name }}</code> on the server, then sign in again.</p>
+  {% else %}
+  <p>Admin accounts need a second step. Scan this with an authenticator app
+    (Google Authenticator, Microsoft Authenticator, Aegis, 1Password…), then enter the code it shows.</p>
+  <div class="qr">{{ qr_svg|safe }}</div>
+  <p class="muted">Can't scan? Enter this key manually:</p>
+  <p class="secret small">{{ secret }}</p>
+  <form method="post" action="/account/mfa">
+    <input type="hidden" name="csrf" value="{{ p.csrf }}">
+    <label>6-digit code <input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required autofocus></label>
+    <button>Turn on</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

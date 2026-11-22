@@ -1,0 +1,7 @@
+[Unit]
+Description=Update yt-dlp (YouTube changes often) and restart the worker
+
+[Service]
+Type=oneshot
+ExecStart=/opt/privatube/venv/bin/pip install -q -U --pre "yt-dlp[default]"
+ExecStartPost=/bin/systemctl try-restart privatube-worker.service

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Channels · Admin{% endblock %}
+{% block main %}
+{% include "admin/_nav.html" %}
+<section class="panel">
+<h2>Channels</h2>
+<table>
+  <tr><th>Channel</th><th>Subscribed</th><th>Ready</th><th>Queued</th><th>Not downloaded</th><th>Failed</th><th>Last checked</th></tr>
+  {% for c in channels %}
+  <tr>
+    <td><a href="/admin/channels/{{ c.id }}">{{ c.title or c.url }}</a>{% if c.last_error %} <span class="err" title="{{ c.last_error }}">⚠</span>{% endif %}</td>
+    <td>{{ 'yes' if c.subscribed else 'no' }}{% if c.subscribed and c.auto_download %} (auto){% endif %}</td>
+    <td>{{ c.n_ready or 0 }}</td><td>{{ c.n_queued or 0 }}</td><td>{{ c.n_listed or 0 }}</td><td>{{ c.n_failed or 0 }}</td>
+    <td>{{ c.last_polled_at|ago }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</section>
+{% endblock %}

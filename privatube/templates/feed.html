@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block main %}
+{% if q is defined and q %}<h2 class="pagehead">{{ _('Results for “{q}”', q=q) }}</h2>{% endif %}
+{% if resume %}
+<h2 class="pagehead">{{ _('Continue watching') }} <a class="headlink" href="/history">{{ _('History') }} ›</a></h2>
+<div class="grid resume">{% with cards=resume, more=False %}{% include "_cards.html" %}{% endwith %}</div>
+<h2 class="pagehead">{{ _('Latest') }}</h2>
+{% endif %}
+{% if not cards %}<p class="empty">{{ _('Nothing found.') if q is defined else _('No videos yet.') }}</p>{% endif %}
+<div class="grid">{% include "_cards.html" %}</div>
+{% endblock %}

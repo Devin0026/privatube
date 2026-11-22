@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Users · Admin{% endblock %}
+{% block main %}
+{% include "admin/_nav.html" %}
+<section class="panel">
+  <h2>New account</h2>
+  <form method="post" action="/admin/users" class="row">
+    <input type="hidden" name="csrf" value="{{ p.csrf }}">
+    <input name="username" placeholder="username (blank = random)" pattern="[A-Za-z0-9._\-]{2,32}">
+    <select name="role"><option value="viewer">viewer (all videos)</option><option value="admin">admin</option></select>
+    <button>Create</button>
+  </form>
+  <p class="muted">Admins must also set up an authenticator app (two-factor) before they can use this panel. A strong password is generated and shown once. Users get a new generated password every {{ rotate_months }} months and must write it down. Each account can be signed in on {{ max_devices }} devices at once; signing in on another one signs out the least recently used.</p>
+</section>
+<section class="panel">
+<h2>Accounts</h2>
+<table>
+  <tr><th>User</th><th>Role</th><th>MFA</th><th>Password age</th><th>Last sign-in</th><th>Devices</th><th></th></tr>
+  {% for u in users %}
+  <tr{% if u.disabled %} class="disabled"{% endif %}>
+    <td>{{ u.username }}{% if u.disabled %} (disabled){% endif %}</td>
+    <td>{{ u.role }}</td>
+    <td>{{ 'on' if u.totp_secret else ('required — not set up' if u.role == 'admin' else '—') }}</td>
+    <td>{{ u.pw_changed_at|ago }}</td>
+    <td>{{ u.last_login_at|ago or 'never' }}</td>
+    <td>{{ u.n_sessions }}</td>
+    <td class="actions">
+      <form method="post" action="/admin/users/{{ u.id }}/reset" data-confirm="Generate a new password for {{ u.username }} and sign out all their devices?"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small secondary">Reset password</button></form>
+      {% if u.id != p.id %}
+      {% if u.totp_secret %}<form method="post" action="/admin/users/{{ u.id }}/reset-mfa" data-confirm="Remove two-factor setup for {{ u.username }}? They must scan a new QR code at next sign-in."><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small secondary">Reset MFA</button></form>{% endif %}
+      <form method="post" action="/admin/users/{{ u.id }}/disable"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small secondary">{{ 'Enable' if u.disabled else 'Disable' }}</button></form>
+      <form method="post" action="/admin/users/{{ u.id }}/delete" data-confirm="Delete {{ u.username }}?"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small danger">Delete</button></form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</section>
+{% endblock %}

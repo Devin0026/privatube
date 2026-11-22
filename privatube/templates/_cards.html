@@ -1,0 +1,19 @@
+{% for v in cards %}
+<a class="card" href="/v/{{ v.id }}">
+  <div class="thumb">
+    {% if v.thumb_url %}<img src="{{ v.thumb_url }}" alt="" loading="lazy">{% endif %}
+    {% if v.duration %}<span class="dur">{{ v.duration|duration }}</span>{% endif %}
+    {% if v.is_short %}<span class="badge">{{ _('Short') }}</span>{% endif %}
+    {% if v.watched_pct %}<span class="watched"><i data-w="{{ v.watched_pct }}"></i></span>{% endif %}
+  </div>
+  <div class="meta">
+    {% if v.avatar_url and not hide_channel %}<img class="avatar" src="{{ v.avatar_url }}" alt="" loading="lazy">{% endif %}
+    <div>
+      <div class="title">{{ v.title }}</div>
+      {% if not hide_channel %}<div class="sub">{{ v.ch_title or '' }}</div>{% endif %}
+      <div class="sub">{{ (v.published_at or v.ready_at)|ago }}</div>
+    </div>
+  </div>
+</a>
+{% endfor %}
+{% if more %}<div class="more" data-more="{{ more_url }}"></div>{% endif %}

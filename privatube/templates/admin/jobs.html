@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Jobs · Admin{% endblock %}
+{% block main %}
+{% include "admin/_nav.html" %}
+{% if queue or singles %}
+<section class="panel">
+<h2>Download queue by channel</h2>
+<p class="muted">High-priority channels download first, then Normal, then Low; single videos you added by URL
+  come right after High. Within a channel, newest first when queued together.</p>
+<table>
+  <tr><th>Channel</th><th>Queued</th><th>Est. size</th><th>Priority</th><th></th></tr>
+  {% for q in queue %}
+  <tr>
+    <td><a href="/admin/channels/{{ q.id }}">{{ q.title or q.url }}</a></td>
+    <td>{{ q.n }}{% if q.waiting %} <span class="sub">({{ q.waiting }} waiting to retry)</span>{% endif %}</td>
+    <td>{{ estimate.by_channel.get(q.id, 0)|size }}</td>
+    <td><form method="post" action="/admin/channels/{{ q.id }}/priority" class="inline">
+      <input type="hidden" name="csrf" value="{{ p.csrf }}"><input type="hidden" name="back" value="jobs">
+      <select name="priority">{% for k, name in priorities.items() %}<option value="{{ k }}"{% if k == q.priority %} selected{% endif %}>{{ name }}</option>{% endfor %}</select>
+      <button class="small secondary">Set</button></form></td>
+    <td><form method="post" action="/admin/channels/{{ q.id }}/cancel-queue" class="inline"
+          data-confirm="Cancel all {{ q.n }} queued downloads of this channel? Downloaded videos are kept.">
+      <input type="hidden" name="csrf" value="{{ p.csrf }}"><input type="hidden" name="back" value="jobs">
+      <button class="small danger">Cancel queued</button></form></td>
+  </tr>
+  {% endfor %}
+  {% if singles %}<tr><td>Single videos (added by URL)</td><td>{{ singles }}</td><td></td><td>between High and Normal</td><td></td></tr>{% endif %}
+</table>
+<p>Total about <b>{{ estimate.bytes|size }}</b>; room before downloads pause: about <b>{{ space|size }}</b>.
+  {% if estimate.bytes > space %}<span class="err">The queue doesn't fit.</span>{% endif %}
+  <span class="muted">Sizes are estimates from video length and what each channel's downloads averaged so far.</span></p>
+</section>
+{% endif %}
+
+<section class="panel">
+<h2>Jobs</h2>
+{% if jobs|selectattr('status', 'equalto', 'failed')|list %}
+<form method="post" action="/admin/jobs/clear-failed" class="inline"><input type="hidden" name="csrf" value="{{ p.csrf }}">
+  <input type="hidden" name="back" value="jobs"><button class="secondary small">Clear all failures</button></form>
+{% endif %}
+<table>
+  <tr><th>#</th><th>Kind</th><th>Target</th><th>Status</th><th>Tries</th><th>Updated</th><th>Error</th><th></th></tr>
+  {% for j in jobs %}
+  <tr>
+    <td>{{ j.id }}</td><td>{{ j.kind }}</td>
+    <td>{% if j.video_id %}{{ j.title or j.yt_id }}{% else %}{{ j.ch_title or j.ch_url }}{% endif %}</td>
+    <td>{{ j.status }}{% if j.status == 'running' and j.progress is not none %} {{ (j.progress * 100)|round|int }}%{% endif %}
+      {% if j.status == 'pending' and j.run_after > j.updated_at %}<span class="sub">(waits)</span>{% endif %}</td>
+    <td>{{ j.attempts }}</td><td>{{ j.updated_at|ago }}</td>
+    <td class="err">{{ j.error or '' }}</td>
+    <td class="actions">
+      {% if j.status in ('failed','cancelled','pending') %}<form method="post" action="/admin/jobs/{{ j.id }}/retry"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small">{{ 'Run now' if j.status == 'pending' else 'Retry' }}</button></form>{% endif %}
+      {% if j.status == 'failed' %}<form method="post" action="/admin/jobs/{{ j.id }}/dismiss"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small secondary">Dismiss</button></form>{% endif %}
+      {% if j.status == 'pending' %}<form method="post" action="/admin/jobs/{{ j.id }}/cancel"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small secondary">Cancel</button></form>{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</section>
+{% endblock %}

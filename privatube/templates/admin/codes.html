@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Access codes · Admin{% endblock %}
+{% block main %}
+{% include "admin/_nav.html" %}
+<section class="panel">
+  <h2>New access code</h2>
+  <form method="post" action="/admin/codes" class="stack">
+    <input type="hidden" name="csrf" value="{{ p.csrf }}">
+    <label>Label (who is it for?) <input name="label" maxlength="100"></label>
+    <div class="row">
+      <label>Devices
+        <select name="max_devices"><option>1</option><option selected>3</option><option>5</option><option>10</option></select></label>
+      <label>Each device stays signed in for <input type="number" name="session_days" value="7" min="1" max="365"> days</label>
+      <label>Code expires after <input type="number" name="expires_days" value="30" min="0" max="3650"> days (0 = never)</label>
+    </div>
+    <fieldset><legend>Channels</legend>
+      {% for c in channels %}<label class="check"><input type="checkbox" name="channel" value="{{ c.id }}"> {{ c.title or c.url }}</label>{% else %}<span class="muted">No channels yet.</span>{% endfor %}
+    </fieldset>
+    <label>Single videos (YouTube URLs or IDs already in the library, one per line)
+      <textarea name="videos" rows="3"></textarea></label>
+    <button>Create code</button>
+  </form>
+</section>
+<section class="panel">
+<h2>Codes</h2>
+<table>
+  <tr><th>Label</th><th>Grants</th><th>Devices used</th><th>Signed-in devices</th><th>Expires</th><th></th></tr>
+  {% for c in codes %}
+  <tr{% if c.disabled %} class="disabled"{% endif %}>
+    <td>{{ c.label or ('#' ~ c.id) }}{% if c.disabled %} (disabled){% endif %}</td>
+    <td>{{ c.ch_names or '' }}{% if c.n_videos %}{{ ' + ' if c.ch_names }}{{ c.n_videos }} video(s){% endif %}</td>
+    <td>{{ c.used_devices }} / {{ c.max_devices }}</td>
+    <td>{{ c.n_sessions }}</td>
+    <td>{{ c.expires_at|date if c.expires_at else 'never' }}</td>
+    <td class="actions">
+      <form method="post" action="/admin/codes/{{ c.id }}/disable"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small secondary">{{ 'Enable' if c.disabled else 'Disable' }}</button></form>
+      <form method="post" action="/admin/codes/{{ c.id }}/revoke" data-confirm="Sign out every device using this code and free its device slots?"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small secondary">Sign out devices</button></form>
+      <form method="post" action="/admin/codes/{{ c.id }}/delete" data-confirm="Delete this code?"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small danger">Delete</button></form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</section>
+{% endblock %}

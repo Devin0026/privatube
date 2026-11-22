@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Admin · PrivaTube{% endblock %}
+{% block main %}
+{% include "admin/_nav.html" %}
+<section class="panel">
+  <h2>Add from YouTube</h2>
+  <form method="post" action="/admin/add" class="addform">
+    <input type="hidden" name="csrf" value="{{ p.csrf }}">
+    <textarea name="url" rows="3" required placeholder="Video or channel links, or @handles. Several at once: one per line (or separated by spaces/commas)."></textarea>
+    <select name="kind">
+      <option value="auto">Detect automatically</option>
+      <option value="video">Single video</option>
+      <option value="channel">Channel (subscribe)</option>
+    </select>
+    <select name="max_height" title="Maximum video quality">{% for h in heights %}<option value="{{ h }}"{% if h == default_height %} selected{% endif %}>{{ h }}p</option>{% endfor %}</select>
+    <select name="backfill" title="Channel: what to download right away">{% for k, label in ranges %}<option value="{{ k }}">Channel: {{ label|lower if k else 'download nothing yet (pick by hand)' }}</option>{% endfor %}</select>
+    <select name="priority" title="Channel: download priority">{% for k, name in priorities.items() %}<option value="{{ k }}"{% if k == 0 %} selected{% endif %}>Priority: {{ name }}</option>{% endfor %}</select>
+    <label class="check"><input type="checkbox" name="auto_download" value="1" checked> Channel: auto-download new uploads</label>
+    <label class="check"><input type="checkbox" name="include_shorts" value="1"> Channel: include Shorts</label>
+    <input name="include_keywords" placeholder="Channel: only titles with… (optional)">
+    <input name="exclude_keywords" placeholder="Channel: skip titles with… (optional)">
+    <button>Add</button>
+  </form>
+  <p class="muted">The settings next to the box apply to every link you paste (up to {{ max_add }} at a time).
+    Adding a channel lists its recent videos (up to 200) and queues the range you chose, newest first. You can tick more later; new uploads after that are downloaded automatically (if enabled) when their title passes the keyword filters (comma-separated, any match; editable later on the channel page). Live streams are skipped.</p>
+</section>
+
+<section class="panel">
+  <h2>Status</h2>
+  <div class="stats">
+    {% for s in ['ready','queued','downloading','failed','listed','evicted'] %}
+    <a class="stat" href="/admin/videos?status={{ s }}"><b>{{ counts.get(s, 0) }}</b><span>{{ s }}</span></a>
+    {% endfor %}
+    <a class="stat" href="/admin/jobs"><b>{{ pending }}</b><span>pending jobs</span></a>
+  </div>
+  <h3>Storage</h3>
+  <table class="storage">
+    <tr><th>Videos</th><th>Size</th><th>Disk</th></tr>
+    <tr><td>{{ stored.n }}</td><td>{{ stored.bytes|size }}</td><td>{{ disk.free|size }} free of {{ disk.total|size }}</td></tr>
+  </table>
+  <p>{% if estimate.n %}Waiting to download: <b>{{ estimate.n }} video(s)</b>, about <b>{{ estimate.bytes|size }}</b>{% if estimate.unknown %}
+    ({{ estimate.unknown }} of unknown length counted as typical){% endif %}.{% else %}Nothing waiting to download.{% endif %}
+    Room for about <b>{{ space|size }}</b> more before downloads pause (they pause under {{ min_free|size }} free).
+    {% if estimate.bytes > space %}<span class="err">The queue doesn't fit: cancel some, lower the quality, or delete old videos.</span>{% endif %}</p>
+  <p>Last database backup: {% if backup %}<b>{{ backup.at|ago }}</b> ({{ backup.size|size }}; the last {{ backup_keep }} are kept in the data folder's <code>backups/</code>){% else %}<b>not yet</b>{% endif %}.</p>
+  <form method="post" action="/admin/backup" class="inline"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="secondary small">Back up now</button></form>
+  {% for j in running %}
+  <p>Running: {{ j.kind }} {{ j.title or j.yt_id or j.ch_url or '' }}
+    {% if j.progress is not none %}<progress max="1" value="{{ j.progress }}"></progress> {{ (j.progress * 100)|round|int }}%{% endif %}</p>
+  {% endfor %}
+</section>
+
+{% if failed %}
+<section class="panel">
+  <h2>Recent failures</h2>
+  <form method="post" action="/admin/jobs/clear-failed" class="inline"><input type="hidden" name="csrf" value="{{ p.csrf }}">
+    <button class="secondary small">Clear failures</button></form>
+  <span class="muted">Hides them from these lists; nothing is deleted. Failed downloads can still be retried from Videos → failed.</span>
+  <table>{% for j in failed %}
+    <tr><td>{{ j.kind }}</td><td>{{ j.title or j.yt_id or '' }}</td><td class="err">{{ j.error }}</td><td>{{ j.updated_at|ago }}</td></tr>
+  {% endfor %}</table>
+</section>
+{% endif %}
+{% endblock %}

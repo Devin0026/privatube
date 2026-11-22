@@ -1,0 +1,10 @@
+# Port 80, only for Let's Encrypt HTTP-01 challenges of this site.
+# (Does not claim default_server, so other sites on port 80 keep working.)
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __HOSTS__;
+    server_tokens off;
+    location /.well-known/acme-challenge/ { root /var/www/letsencrypt; }
+    location / { return 404; }
+}

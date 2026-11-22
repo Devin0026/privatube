@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Share code') }} · PrivaTube{% endblock %}
+{% block main %}
+<div class="auth share-result">
+  <h1>{{ _('Share code') }}</h1>
+  <p class="sub">{{ v.title }}</p>
+  <p class="secret">{{ code }}</p>
+  <p>{{ _('Send the link, or the code with the address below. It opens only this video, on {n} device(s), until {date}.', n=devices, date=expires|date) }}</p>
+  <label>{{ _('Link') }}
+    <span class="copyrow"><input readonly value="{{ link }}" id="share-link"><button type="button" class="secondary" data-copy="share-link" data-copied="{{ _('Copied') }}">{{ _('Copy') }}</button></span></label>
+  <p class="sub">{{ code_url }}</p>
+  <p><a class="btnlink" href="/v/{{ v.id }}">← {{ _('Back to the video') }}</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Channels') }} · PrivaTube{% endblock %}
+{% block main %}
+<h2 class="pagehead">{{ _('Channels') }}</h2>
+{% if not channels %}<p class="empty">{{ _('No channels yet.') }}</p>{% endif %}
+<div class="chgrid">
+{% for c in channels %}
+  <a class="chcard" href="/c/{{ c.id }}">
+    {% if c.avatar_url %}<img src="{{ c.avatar_url }}" alt="" loading="lazy">{% else %}<div class="noavatar">{{ (c.title or '?')[:1] }}</div>{% endif %}
+    <div class="title">{{ c.title or c.url }}</div>
+    <div class="sub">{{ _('{n} videos', n=c.n) }} · {{ _('updated {ago}', ago=c.latest|ago) }}</div>
+  </a>
+{% endfor %}
+</div>
+{% endblock %}

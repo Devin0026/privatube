@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}YouTube login · Admin{% endblock %}
+{% block main %}
+{% include "admin/_nav.html" %}
+<section class="panel">
+  <h2>YouTube login (cookies)</h2>
+  <p>When YouTube answers <i>“Sign in to confirm you’re not a bot”</i>, downloads need the cookies of a signed-in
+    Google account. Status:
+    {% if info %}<b>cookies in use</b> ({{ info.n }} youtube.com cookies, uploaded {{ info.at|ago }}).
+    {% else %}<b>none</b> (downloads run signed out).{% endif %}</p>
+  <div class="row">
+    <form method="post" action="/admin/youtube/test" class="inline"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="secondary">Test now</button></form>
+    {% if info %}<form method="post" action="/admin/youtube/remove" class="inline" data-confirm="Remove the cookies?"><input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="danger">Remove cookies</button></form>{% endif %}
+  </div>
+</section>
+<section class="panel">
+  <h2>Upload cookies</h2>
+  <p class="muted">Any of: Netscape <code>cookies.txt</code>, a JSON export (Cookie-Editor, EditThisCookie),
+    or a <code>Cookie:</code> header string copied from the browser's developer tools on youtube.com.</p>
+  <form method="post" action="/admin/youtube/upload" enctype="multipart/form-data" class="stack">
+    <input type="hidden" name="csrf" value="{{ p.csrf }}">
+    <label>File <input type="file" name="file" accept=".txt,text/plain"></label>
+    <label>…or paste its contents <textarea name="text" rows="4" placeholder="# Netscape HTTP Cookie File …   or   [{&quot;domain&quot;: …}]   or   SID=…; HSID=…; …"></textarea></label>
+    <button>Save</button>
+  </form>
+</section>
+<section class="panel">
+  <h2>How to get the file</h2>
+  <ol>
+    <li><b>Use a spare Google account, never your main one.</b> YouTube may suspend accounts used for downloading.</li>
+    <li>On your computer, open a <b>private / incognito</b> window and sign in to that account on youtube.com.</li>
+    <li>In the same tab, go to <code>https://www.youtube.com/robots.txt</code>.</li>
+    <li>Export the cookies for youtube.com with a cookies.txt extension (for example “Get cookies.txt LOCALLY”;
+      allow it in private windows), then <b>close the private window right away</b>. If you keep browsing with that
+      session, YouTube rotates the cookies and the file stops working.<br>
+      Without an extension: in that tab open developer tools → Network, reload, click the first request to
+      www.youtube.com and copy the whole <code>cookie:</code> request header (not <code>document.cookie</code>,
+      which misses the important login cookies).</li>
+    <li>Upload the file here and press <b>Test now</b>. The file is stored only on your server (readable by the app only).</li>
+  </ol>
+  <p class="muted">Cookies last weeks to months. When downloads start failing with the bot message again, the
+    “Needs attention” banner (and your phone alert, if set up) will say so: export a fresh file the same way.</p>
+</section>
+{% endblock %}

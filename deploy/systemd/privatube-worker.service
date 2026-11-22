@@ -1,0 +1,32 @@
+[Unit]
+Description=PrivaTube downloader / scheduler
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=privatube
+Group=privatube
+EnvironmentFile=/etc/privatube/env
+ExecStart=/opt/privatube/venv/bin/python -m privatube.worker
+Restart=always
+RestartSec=10
+Nice=10
+IOSchedulingClass=idle
+MemoryMax=700M
+# hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/privatube
+UMask=0027
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=yes
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

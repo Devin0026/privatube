@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ ch.title }} · PrivaTube{% endblock %}
+{% block main %}
+<div class="chhead">
+  {% if ch.avatar_url %}<img src="{{ ch.avatar_url }}" alt="">{% endif %}
+  <div>
+    <h1>{{ ch.title or ch.url }}</h1>
+    {% if ch.handle %}<div class="sub">{{ ch.handle }}</div>{% endif %}
+  </div>
+</div>
+{% if ch.description %}<details class="chdesc"><summary>{{ _('About') }}</summary><p class="pre">{{ ch.description }}</p></details>{% endif %}
+{% set hide_channel = True %}
+<div class="grid">{% include "_cards.html" %}</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+.venv/
+data/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+*.db
+*.db-wal
+*.db-shm
+cookies.txt

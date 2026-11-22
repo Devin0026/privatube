@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="PrivaTube">
+  <defs>
+    <linearGradient id="pt-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14b8a6"/>
+      <stop offset="1" stop-color="#0f5f58"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#pt-bg)"/>
+  <!-- a screen, kept on your own shelf -->
+  <rect x="10" y="16" width="44" height="32" rx="8" fill="#fff"/>
+  <path d="M28 24.6v14.8c0 1 1.1 1.6 1.9 1l10.6-7.4c.7-.5.7-1.5 0-2L29.9 23.6c-.8-.6-1.9 0-1.9 1z" fill="#0f5f58"/>
+  <!-- bookmark: saved -->
+  <path d="M43 12h7v15l-3.5-2.6L43 27z" fill="#fbbf24"/>
+  <rect x="18" y="52" width="28" height="3.5" rx="1.75" fill="#fff" fill-opacity=".7"/>
+</svg>

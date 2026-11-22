@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ _('History') }} · PrivaTube{% endblock %}
+{% block main %}
+<h2 class="pagehead">{{ _('History') }}
+  {% if cards %}<form method="post" action="/history/clear" class="inline headform"
+        data-confirm="{{ _('Clear your watch history? Where you stopped in each video is forgotten too.') }}">
+    <input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="small secondary">{{ _('Clear history') }}</button></form>{% endif %}
+</h2>
+{% if not cards %}<p class="empty">{{ _('Nothing watched yet.') }}</p>{% endif %}
+<div class="grid">{% include "_cards.html" %}</div>
+{% endblock %}

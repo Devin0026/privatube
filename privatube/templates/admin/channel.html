@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ ch.title or ch.url }} · Admin{% endblock %}
+{% block main %}
+{% include "admin/_nav.html" %}
+<section class="panel">
+  <h2>{{ ch.title or ch.url }}</h2>
+  <p class="muted"><a href="{{ ch.url }}" rel="noreferrer" target="_blank">{{ ch.url }}</a>
+    {% if ch.yt_id %} · <a href="/c/{{ ch.id }}">view as viewer</a>{% endif %}</p>
+  {% if syncing %}<p class="flash">Video list is being fetched ({{ syncing.status }}). <a href="">Refresh</a>{% if syncing.error %} — last error: {{ syncing.error }}{% endif %}</p>{% endif %}
+  {% if ch.last_error %}<p class="err">Last sync error: {{ ch.last_error }}</p>{% endif %}
+  <form method="post" action="/admin/channels/{{ ch.id }}/settings" class="row">
+    <input type="hidden" name="csrf" value="{{ p.csrf }}">
+    <label class="check"><input type="checkbox" name="subscribed" value="1" {% if ch.subscribed %}checked{% endif %}> Subscribed (check for new uploads)</label>
+    <label class="check"><input type="checkbox" name="auto_download" value="1" {% if ch.auto_download %}checked{% endif %}> Auto-download new uploads</label>
+    <label class="check"><input type="checkbox" name="include_shorts" value="1" {% if ch.include_shorts %}checked{% endif %}> Include Shorts</label>
+    <label>Max quality <select name="max_height">{% for h in heights %}<option value="{{ h }}"{% if h == ch_height %} selected{% endif %}>{{ h }}p</option>{% endfor %}</select></label>
+    <label>Priority <select name="priority">{% for k, name in priorities.items() %}<option value="{{ k }}"{% if k == ch.priority %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+    <label>Check every <input type="number" name="poll_minutes" min="15" max="1440" value="{{ ch.poll_minutes }}"> min</label>
+    <div class="kw">
+      <label>Only auto-download titles containing <span class="muted">(any of; comma or new line; empty = all; matches the Chinese or the English title)</span>
+        <textarea name="include_keywords" rows="2" placeholder="e.g. 新闻, interview">{{ ch.include_keywords }}</textarea></label>
+      <label>Never auto-download titles containing
+        <textarea name="exclude_keywords" rows="2" placeholder="e.g. 直播, trailer, #shorts">{{ ch.exclude_keywords }}</textarea></label>
+    </div>
+    <button>Save</button>
+  </form>
+  <p class="muted">Keyword filters apply to new uploads. Videos that don't match stay in the list below as "not downloaded", so you can still pick them by hand.</p>
+  <div class="row">
+    <form method="post" action="/admin/channels/{{ ch.id }}/sync" class="inline">
+      <input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="secondary">Check for new videos now</button>
+    </form>
+    <form method="post" action="/admin/channels/{{ ch.id }}/remove" class="inline"
+          data-confirm="Remove this channel? Videos not downloaded are dropped from the list; downloaded ones are kept.">
+      <input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="danger">{{ 'Cancel and remove channel' if not ch.baseline_done or syncing else 'Remove channel' }}</button>
+    </form>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Videos</h2>
+  <div class="row">
+    <form method="post" action="/admin/channels/{{ ch.id }}/queue-range" class="inline">
+      <input type="hidden" name="csrf" value="{{ p.csrf }}">
+      Download: <select name="range">{% for k, label in ranges %}<option value="{{ k }}">{{ label }}</option>{% endfor %}</select>
+      <button class="secondary">Queue</button>
+    </form>
+    {% set nq = videos|selectattr('status', 'equalto', 'queued')|list|length %}
+    {% if nq %}<form method="post" action="/admin/channels/{{ ch.id }}/cancel-queue" class="inline"
+          data-confirm="Cancel the {{ nq }} queued downloads of this channel?">
+      <input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="danger">Cancel {{ nq }} queued</button></form>{% endif %}
+  </div>
+  <p class="muted">“Latest N” and date ranges follow the keyword filter and the Shorts setting; videos already downloaded count but aren't fetched again.</p>
+  <form method="post" action="/admin/channels/{{ ch.id }}/download">
+    <input type="hidden" name="csrf" value="{{ p.csrf }}">
+    <p><button>Download selected</button> <button type="button" class="secondary" data-select-all="video">Select all not downloaded</button>
+      <button type="button" class="secondary" data-select-matching="video">Select keyword matches</button>
+      <span class="muted">uses the keyword boxes above, saved or not</span></p>
+    <p><input type="search" class="rowfilter" data-filter-rows="table.picklist tr[data-title]"
+              placeholder="Search this channel's videos by title…" aria-label="Search videos">
+      <span class="muted rowcount"></span></p>
+    <table class="picklist">
+      <tr><th></th><th></th><th>Title</th><th>Keywords</th><th>Length</th><th>Published</th><th>Status</th></tr>
+      {% for v in videos %}
+      <tr class="st-{{ v.status }}" data-title="{{ v.title }}&#10;{{ v.alt_title or '' }}">
+        <td>{% if v.status in ('listed','failed','evicted') and not v.members %}<input type="checkbox" name="video" value="{{ v.id }}">{% endif %}</td>
+        <td><img class="pickthumb" src="https://i.ytimg.com/vi/{{ v.yt_id }}/mqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer"></td>
+        <td>{% if v.status == 'ready' %}<a href="/v/{{ v.id }}">{{ v.title }}</a>{% else %}{{ v.title }}{% endif %}
+          {% if v.alt_title %}<div class="sub">{{ v.alt_title }}</div>{% endif %}
+          {% if v.is_short %}<span class="badge static">Short</span>{% endif %}
+          {% if v.members %}<span class="badge static" title="Only paying members can watch it; never downloaded">Members only</span>{% endif %}</td>
+        <td class="kwm">{% if has_filter %}{{ '✓ match' if v.match else '—' }}{% endif %}</td>
+        <td>{{ v.duration|duration }}</td>
+        <td>{{ v.published_at|date }}</td>
+        <td>{{ 'skipped' if v.members else ('not downloaded' if v.status == 'listed' else v.status) }}{% if v.error and not v.members %} <span class="err" title="{{ v.error }}">⚠</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </form>
+</section>
+{% endblock %}

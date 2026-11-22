@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Videos · Admin{% endblock %}
+{% block main %}
+{% include "admin/_nav.html" %}
+<section class="panel">
+<h2>Videos {% if status %}({{ status }}){% endif %}</h2>
+<p class="filters">Show:
+  <a href="/admin/videos">all added</a>
+  {% for s in ['ready','queued','downloading','failed','evicted','listed'] %}· <a href="/admin/videos?status={{ s }}">{{ s }}</a> {% endfor %}</p>
+<table>
+  <tr><th>Title</th><th>Channel</th><th>Status</th><th>Size</th><th>Last viewed</th><th></th></tr>
+  {% for v in videos %}
+  <tr>
+    <td>{% if v.status == 'ready' %}<a href="/v/{{ v.id }}">{{ v.title or v.yt_id }}</a>{% else %}{{ v.title or v.yt_id }}{% endif %}</td>
+    <td>{% if v.channel_id %}<a href="/admin/channels/{{ v.channel_id }}">{{ v.ch_title or '' }}</a>{% endif %}</td>
+    <td>{{ v.status }}{% if v.error %} <span class="err" title="{{ v.error }}">⚠</span>{% endif %}</td>
+    <td>{{ v.filesize|size }}</td>
+    <td>{{ v.last_viewed_at|ago }}</td>
+    <td class="actions">
+      {% set back = '/admin/videos' ~ ('?status=' ~ status if status else '') %}
+      {% if v.status in ('listed','failed','evicted') %}
+      <form method="post" action="/admin/videos/{{ v.id }}/download"><input type="hidden" name="csrf" value="{{ p.csrf }}"><input type="hidden" name="back" value="{{ back }}"><button class="small">Download</button></form>
+      {% endif %}
+      {% if v.status == 'ready' %}
+      <form method="post" action="/admin/videos/{{ v.id }}/evict" data-confirm="Delete the video file? Metadata and comments are kept and you can download it again later."><input type="hidden" name="csrf" value="{{ p.csrf }}"><input type="hidden" name="back" value="{{ back }}"><button class="small danger">Delete file</button></form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</section>
+{% endblock %}

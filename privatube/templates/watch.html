@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ v.title }} · PrivaTube{% endblock %}
+{% block main %}
+{% macro comment(c) %}
+<div class="comment">
+  <span class="lavatar {{ c.author|avatar_color }}" aria-hidden="true">{{ c.author|initials }}</span>
+  <div class="cbody">
+    <div class="cauthor">{{ (c.author or '?')|trim }} <span class="sub">{{ c.published_at|ago }}{% if c.is_pinned %} · {{ _('pinned') }}{% endif %}{% if c.likes %} · 👍 {{ c.likes }}{% endif %}</span></div>
+    <div class="pre">{{ c.text }}</div>
+    {% if c.replies %}
+    <details class="replies"><summary>{{ _('1 reply') if c.replies|length == 1 else _('{n} replies', n=c.replies|length) }}</summary>
+      {% for r in c.replies %}{{ comment(r) }}{% endfor %}
+    </details>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
+<script src="{{ asset('player.js') }}" defer></script>
+<div class="watch">
+  <div class="primary">
+    <div class="player" data-video-id="{{ v.id }}" data-position="{{ position }}" data-src="{{ src }}">
+      <video id="player" {% if v.thumb_url %}poster="{{ v.thumb_url }}"{% endif %}
+        controls playsinline preload="metadata" disablePictureInPicture
+        controlsList="nodownload noremoteplayback">
+        {% for t in tracks %}<track kind="subtitles" src="{{ t.src }}" srclang="{{ t.lang }}" label="{{ sub_label(t.lang, t.auto, _) }}">{% endfor %}
+      </video>
+      <div class="wm" aria-hidden="true">{{ p.name }}</div>
+    </div>
+    <h1 class="vtitle">{{ v.title }}</h1>
+    <div class="vbar">
+      {% if v.channel_id %}<a class="vch" href="/c/{{ v.channel_id }}">
+        {% if v.avatar_url %}<img class="avatar" src="{{ v.avatar_url }}" alt="">{% endif %}
+        <span>{{ v.ch_title }}</span></a>{% endif %}
+      <span class="sub">{{ v.published_at|date }}</span>
+      {% if p.kind == 'user' %}
+      <span class="vgap"></span>
+      {% if p.is_admin %}
+      <button type="button" class="secondary share" data-dialog="share-dialog">{{ _('Share') }}</button>
+      <dialog id="share-dialog">
+        <form method="post" action="/v/{{ v.id }}/share" class="stack">
+          <input type="hidden" name="csrf" value="{{ p.csrf }}">
+          <h3>{{ _('Share this video') }}</h3>
+          <label>{{ _('Devices') }} <select name="max_devices"><option>1</option><option>3</option><option>5</option><option>10</option></select></label>
+          <label>{{ _('Valid for (days)') }} <input type="number" name="days" value="{{ share_days }}" min="1" max="365"></label>
+          <div class="row"><button>{{ _('Create code') }}</button><button type="button" class="secondary" data-close>{{ _('Cancel') }}</button></div>
+        </form>
+      </dialog>
+      {% else %}
+      <form method="post" action="/v/{{ v.id }}/share" class="inline" data-confirm="{{ _('Create a share code for this video? It works on 1 device for 3 days.') }}">
+        <input type="hidden" name="csrf" value="{{ p.csrf }}"><button class="secondary share">{{ _('Share') }}</button>
+      </form>
+      {% endif %}
+      {% endif %}
+    </div>
+    {% if v.description %}<details class="desc" open><summary>{{ _('Description') }}</summary><p class="pre">{{ v.description }}</p></details>{% endif %}
+  </div>
+  <aside class="side">
+    {% if up_next %}
+    <h3 class="morehead first">{{ _('More from this channel') }}</h3>
+    <div class="upnext">
+      {% for u in up_next %}
+      <a class="mini" href="/v/{{ u.id }}">
+        <div class="thumb">{% if u.thumb_url %}<img src="{{ u.thumb_url }}" alt="" loading="lazy">{% endif %}
+          {% if u.duration %}<span class="dur">{{ u.duration|duration }}</span>{% endif %}</div>
+        <div><div class="title">{{ u.title }}</div><div class="sub">{{ (u.published_at or u.ready_at)|ago }}</div></div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <section class="comments">
+    <h3>{{ _('{n} comments', n=v.comment_count) }}{% if comments|length < v.comment_count %} <span class="sub">({{ _('showing {n} saved', n=comments|length) }})</span>{% endif %}</h3>
+    {% if comments_fresh %}<p class="sub">{{ _('Comments are updated daily during the first month.') }}</p>{% endif %}
+    {% for c in comments %}{{ comment(c) }}{% endfor %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

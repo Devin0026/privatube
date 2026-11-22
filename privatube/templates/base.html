@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="{{ 'zh-CN' if lang == 'zh' else 'en' }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<title>{% block title %}PrivaTube{% endblock %}</title>
+<link rel="icon" href="{{ asset('logo.svg') }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+<link rel="manifest" href="{{ asset('manifest.json') }}">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tube">
+<meta name="theme-color" content="#0f5f58">
+<link rel="stylesheet" href="{{ asset('style.css') }}">
+<script src="{{ asset('app.js') }}" defer></script>
+</head>
+<body{% if p %} data-csrf="{{ p.csrf }}"{% endif %}>
+{% set path = request.url.path %}
+{% set here = path ~ ('?' ~ request.url.query if request.url.query else '') %}
+<header class="top">
+  <a class="logo" href="/"><img src="{{ asset('logo.svg') }}" alt=""><span>Priva<b>Tube</b></span></a>
+  {% if p and not p.mfa_pending %}
+  <form class="search" action="/search" method="get">
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="{{ _('Search') }}" aria-label="{{ _('Search') }}">
+  </form>
+  {% endif %}
+  <nav class="mainnav">
+    {% if p and not p.mfa_pending %}
+    <a class="navlink{% if path == '/' %} on{% endif %}" href="/" title="{{ _('Home') }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>{{ _('Home') }}</span></a>
+    <a class="navlink{% if path.startswith('/channels') or path.startswith('/c/') %} on{% endif %}" href="/channels" title="{{ _('Channels') }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>{{ _('Channels') }}</span></a>
+    <a class="navlink{% if path.startswith('/history') %} on{% endif %}" href="/history" title="{{ _('History') }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 2"/></svg><span>{{ _('History') }}</span></a>
+    {% if p.role_admin %}
+    <a class="navlink admin{% if path.startswith('/admin') %} on{% endif %}" href="/admin" title="{{ _('Admin') }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg><span>{{ _('Admin') }}</span></a>
+    {% endif %}
+    {% endif %}
+    <a class="navlink lang" href="/lang/{{ 'en' if lang == 'zh' else 'zh' }}?next={{ here|urlencode }}" title="Language / 语言">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg><span>{{ 'EN' if lang == 'zh' else '中文' }}</span></a>
+    {% if p and not p.mfa_pending %}
+    <span class="navsep"></span>
+    <span class="who" title="{{ _('Signed in as {name}', name=p.name) }}"><span class="lavatar {{ p.name|avatar_color }}">{{ p.name|initials }}</span></span>
+    <form method="post" action="/logout" class="inline">
+      <input type="hidden" name="csrf" value="{{ p.csrf }}">
+      <button class="navlink signout" title="{{ _('Sign out') }}"
+        {% if p.kind == 'code' %}data-confirm="{{ _("Signing out uses up this device's slot on your access code. Continue?") }}"{% endif %}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/></svg><span>{{ _('Sign out') }}</span></button>
+    </form>
+    {% endif %}
+  </nav>
+</header>
+{% if msg %}<div class="flash">{{ _(msg) }}</div>{% endif %}
+<main>{% block main %}{% endblock %}</main>
+</body>
+</html>
