@@ -1,7 +1,7 @@
 [project]
 name = "privatube"
 version = "0.1.0"
-description = "Share YouTube videos privately with people who can't watch them on YouTube: a self-hosted, invite-only video library."
+description = "Bring YouTube videos to people where YouTube is blocked or can't be reached: a self-hosted, invite-only video library."
 readme = "README.md"
 license = {text = "AGPL-3.0-or-later"}
 requires-python = ">=3.11"
