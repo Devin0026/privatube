@@ -262,6 +262,8 @@ BNB Chain):
 
 ## 📄 License
 
+Copyright © 2026 Devin0026 and contributors.
+
 [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-or-later). You may use,
 change and share PrivaTube freely. If you run a modified version for other people, you
 must offer them its source code too.
